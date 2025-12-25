@@ -24,9 +24,9 @@ class MenuItem:
         self.callback = callback
 
     def __str__(self) -> str:
-        # Minimalist format
+        # Minimalist format - reserva espaço para a seta para manter alinhamento
         from .colors import GREEN, WHITE, RESET
-        return f"  {GREEN}[{self.key}]{RESET} {WHITE}{self.label}{RESET}"
+        return f"    {GREEN}[{self.key}]{RESET} {WHITE}{self.label}{RESET}"
     
     def format_selected(self) -> str:
         """Returns the format of the item when selected."""
