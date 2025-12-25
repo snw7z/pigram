@@ -18,7 +18,8 @@ class Settings:
 
     # Session directories
     HOME_DIR = Path.home()
-    PIGRAM_DIR = HOME_DIR / ".pigram"
+    # Use .pigram on Linux/Unix (hidden by convention), pigram on Windows (hidden by attributes)
+    PIGRAM_DIR = HOME_DIR / (".pigram" if os.name != 'nt' else "pigram")
     SESSION_PATH = PIGRAM_DIR / "session.session"  # Session file path
     CONFIG_FILE = PIGRAM_DIR / "config.json"  # Configuration file
 
@@ -32,9 +33,33 @@ class Settings:
 
     @classmethod
     def ensure_directories(cls):
-        """Ensures necessary directories exist."""
+        """Ensures necessary directories exist and makes them hidden on Windows."""
         try:
             cls.PIGRAM_DIR.mkdir(parents=True, exist_ok=True)
+            
+            # Make folder hidden on Windows
+            if os.name == 'nt':  # Windows
+                try:
+                    import ctypes
+                    # FILE_ATTRIBUTE_HIDDEN = 0x2
+                    # FILE_ATTRIBUTE_SYSTEM = 0x4 (optional, for better hiding)
+                    ctypes.windll.kernel32.SetFileAttributesW(
+                        str(cls.PIGRAM_DIR),
+                        0x2  # FILE_ATTRIBUTE_HIDDEN
+                    )
+                except Exception:
+                    # If ctypes fails, try using attrib command as fallback
+                    try:
+                        import subprocess
+                        subprocess.run(
+                            ['attrib', '+h', str(cls.PIGRAM_DIR)],
+                            shell=True,
+                            check=False,
+                            capture_output=True
+                        )
+                    except Exception:
+                        # If both methods fail, continue anyway (folder is created)
+                        pass
         except Exception as e:
             # If can't create, try to create parent directory
             raise RuntimeError(f"Could not create directory {cls.PIGRAM_DIR}: {e}")
